@@ -1,0 +1,22 @@
+.turn-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+}
+
+.turn-indicator.your-turn {
+    background: var(--color-accent-dim);
+}
+
+.turn-indicator.your-turn .turn-text {
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+.turn-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}

@@ -1,0 +1,37 @@
+.action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.waiting-indicator {
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+.build-actions {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.action-btn {
+    min-width: 80px;
+}
+
+.action-btn.active {
+    background: var(--color-accent);
+    color: var(--color-bg-primary);
+}
+
+@media (max-width: 480px) {
+    .action-btn {
+        min-width: 70px;
+        padding: var(--space-sm) var(--space-md);
+        font-size: var(--font-size-sm);
+    }
+}

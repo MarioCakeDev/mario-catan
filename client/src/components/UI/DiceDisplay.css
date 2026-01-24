@@ -1,0 +1,161 @@
+.dice-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--color-border);
+    transition: all var(--transition-normal);
+}
+
+.dice-display.clickable {
+    cursor: pointer;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 20px rgba(226, 162, 72, 0.3);
+    animation: pulseGlow 2s infinite;
+}
+
+.dice-display.clickable:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(226, 162, 72, 0.5);
+}
+
+.dice-display.is-rolling {
+    animation: shake 0.1s infinite;
+}
+
+.dice-container {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.die {
+    transition: transform 0.1s;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.die.rolling {
+    animation: diceRoll 0.1s infinite;
+}
+
+.die-dot {
+    transition: all 0.1s;
+}
+
+.dice-total {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    background: var(--color-bg-card);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    min-width: 50px;
+    text-align: center;
+}
+
+.dice-total.critical {
+    color: var(--color-error);
+    background: rgba(231, 76, 60, 0.2);
+    animation: criticalPulse 0.5s infinite;
+}
+
+.dice-hint {
+    font-size: var(--font-size-sm);
+    color: var(--color-accent);
+    font-weight: 500;
+    animation: bounce 1s infinite;
+}
+
+.dice-rolling-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    animation: pulse 0.5s infinite;
+}
+
+.dice-critical {
+    border-color: var(--color-error);
+}
+
+@keyframes diceRoll {
+    0% {
+        transform: rotate(-10deg) scale(1.1);
+    }
+
+    25% {
+        transform: rotate(10deg) scale(0.95);
+    }
+
+    50% {
+        transform: rotate(-5deg) scale(1.05);
+    }
+
+    75% {
+        transform: rotate(5deg) scale(0.98);
+    }
+
+    100% {
+        transform: rotate(-10deg) scale(1.1);
+    }
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(-2px);
+    }
+
+    50% {
+        transform: translateX(2px);
+    }
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(226, 162, 72, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(226, 162, 72, 0.6);
+    }
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+@keyframes criticalPulse {
+
+    0%,
+    100% {
+        background: rgba(231, 76, 60, 0.2);
+    }
+
+    50% {
+        background: rgba(231, 76, 60, 0.4);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}

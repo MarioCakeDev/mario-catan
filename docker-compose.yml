@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # React Frontend (served by Nginx)
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - catan-network
+
+  # Node.js Backend
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGIN=http://localhost
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - catan-network
+
+  # Redis for game state caching
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - catan-network
+
+networks:
+  catan-network:
+    driver: bridge
+
+volumes:
+  redis-data:

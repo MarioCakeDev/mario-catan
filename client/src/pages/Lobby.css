@@ -1,0 +1,214 @@
+.lobby-container {
+    max-width: 500px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.lobby-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lobby-header h1 {
+    font-size: var(--font-size-xl);
+}
+
+.room-code-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-lg);
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.room-code-display:hover {
+    background: var(--color-bg-tertiary);
+}
+
+.room-code-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.room-code {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--color-accent);
+}
+
+.room-code-hint {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.players-section h2 {
+    font-size: var(--font-size-md);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.players-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.player-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+}
+
+.player-card.is-you {
+    border-color: var(--color-accent);
+}
+
+.player-card.empty {
+    opacity: 0.5;
+}
+
+.empty-slot {
+    background: var(--color-bg-tertiary);
+    border: 2px dashed var(--color-text-muted);
+}
+
+.player-name {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.host-badge,
+.you-badge {
+    font-size: var(--font-size-xs);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
+.host-badge {
+    background: var(--color-accent-dim);
+    color: var(--color-bg-primary);
+}
+
+.you-badge {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+}
+
+.status-connected {
+    font-size: var(--font-size-xs);
+    color: var(--color-success);
+}
+
+.status-disconnected {
+    font-size: var(--font-size-xs);
+    color: var(--color-error);
+}
+
+.lobby-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.waiting-message {
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+/* Color selection */
+.color-selection {
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+}
+
+.color-selection h3 {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
+  text-align: center;
+}
+
+.color-options {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.color-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.color-btn:hover:not(.disabled) {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.color-btn.selected {
+  border-color: var(--color-text-primary);
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(255,255,255,0.3);
+}
+
+.color-btn.disabled {
+  cursor: not-allowed;
+}
+
+.player-color-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.player-color-indicator.empty-slot {
+  background: var(--color-bg-tertiary);
+  border: 2px dashed var(--color-border);
+}
+
+.waiting-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: var(--space-sm);
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.status-connected {
+  color: var(--color-success);
+  font-size: 12px;
+}
+
+.status-disconnected {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}

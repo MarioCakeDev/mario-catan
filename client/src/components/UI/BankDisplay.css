@@ -1,0 +1,70 @@
+.bank-display {
+    background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-bg-tertiary));
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    border: 2px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.bank-title {
+    font-size: var(--font-size-md);
+    color: var(--color-text-primary);
+    text-align: center;
+    margin: 0;
+    padding-bottom: var(--space-xs);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.bank-resources {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+}
+
+.bank-resource {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--space-xs);
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+    min-width: 45px;
+}
+
+.bank-resource .resource-icon {
+    font-size: 18px;
+}
+
+.bank-resource .resource-count {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.bank-dev-cards {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+}
+
+.dev-card-icon {
+    font-size: 18px;
+}
+
+.dev-card-count {
+    font-weight: 600;
+    color: var(--color-accent);
+}
+
+.dev-card-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}

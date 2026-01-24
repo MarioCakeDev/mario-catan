@@ -1,0 +1,182 @@
+/* Mobile-optimized animations using GPU properties (transform, opacity) */
+
+.hex-board-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    touch-action: none;
+    /* Prevent browser zoom/scroll */
+}
+
+.build-mode-indicator {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(44, 62, 80, 0.9);
+    padding: 10px 20px;
+    border-radius: 20px;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    border: 2px solid #e2a248;
+    pointer-events: none;
+}
+
+/* Valid spot pulse animation - Low cost */
+@keyframes validPulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0.1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+}
+
+.valid-spot-indicator {
+    animation: validPulse 2s infinite ease-in-out;
+    will-change: transform, opacity;
+}
+
+/* Selected item pop-in animation - Bounce effect */
+@keyframes popIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.ghost-settlement,
+.ghost-city {
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    will-change: transform, opacity;
+}
+
+/* Road selection animation */
+.edge.selected {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+}
+
+.hit-target {
+    /* Visual debugging: Change to rgba(255,0,0,0.1) to see touch targets */
+    fill: transparent;
+    pointer-events: auto;
+    /* Ensure it captures clicks */
+}
+
+/* Make sure visuals don't block clicks on hit target */
+.settlement,
+.city,
+.ghost-settlement,
+.ghost-city {
+    pointer-events: none;
+}
+
+/* Robber mode highlight */
+.robber-mode {
+    background: rgba(231, 76, 60, 0.9) !important;
+}
+
+.hex-board {
+    width: 100%;
+    height: 100%;
+    /* max-width: 600px; Remove max-width constraint for full board feel */
+}
+
+.can-build {
+    cursor: crosshair;
+}
+
+.hex-board.can-build .hex-tile {
+    opacity: 0.8;
+}
+
+.hex-polygon {
+    transition: fill 0.3s ease;
+}
+
+/* .hex-tile:hover .hex-polygon {
+    filter: brightness(1.1);
+} */
+
+.resource-icon {
+    pointer-events: none;
+    user-select: none;
+}
+
+.number-token {
+    pointer-events: none;
+    user-select: none;
+}
+
+.edge {
+    transition: stroke-width 0.2s ease, stroke 0.2s ease;
+}
+
+/* .edge:hover {
+    stroke-width: 10;
+    stroke: rgba(255, 255, 255, 0.5);
+} */
+
+.edge.clickable:hover {
+    stroke: rgba(255, 255, 255, 0.6);
+    stroke-width: 12;
+}
+
+.vertex {
+    transition: transform 0.2s ease;
+}
+
+.vertex.clickable:hover {
+    /* transform: scale(1.2); Disable hover scale when showing ghost */
+}
+
+.vertex-target {
+    transition: r 0.2s ease;
+}
+
+.vertex.clickable:hover .vertex-target {
+    r: 10;
+    fill: rgba(255, 255, 255, 0.5);
+}
+
+.settlement,
+.city {
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.harbor text {
+    user-select: none;
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.hex-board-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: white;
+    font-size: 1.2rem;
+}

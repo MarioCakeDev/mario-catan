@@ -223,6 +223,8 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
     // Mobile Interaction: Tap to select, then confirm via UI
     const handleVertexClick = (vertexId: string) => {
         if (!canBuild) return;
+        // In setup, always allow vertex selection (settlement)
+        if (buildMode && buildMode !== 'settlement' && buildMode !== 'city') return;
 
         // Toggle selection
         if (selectedPlacement?.id === vertexId) {
@@ -234,6 +236,8 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
 
     const handleEdgeClick = (edgeId: string) => {
         if (!canBuild) return;
+        // In setup, allow edge selection for road; otherwise only in road mode
+        if (buildMode !== 'road' && !(phase === 'setup' && !buildMode)) return;
 
         // Toggle selection
         if (selectedPlacement?.id === edgeId) {
@@ -246,8 +250,10 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
     const handleConfirmPlacement = () => {
         if (!selectedPlacement) return;
 
+        const effectiveMode = buildMode || (phase === 'setup' ? 'settlement' : null);
+
         if (selectedPlacement.type === 'vertex') {
-            if (buildMode === 'city') {
+            if (effectiveMode === 'city') {
                 buildCity(selectedPlacement.id);
             } else {
                 buildSettlement(selectedPlacement.id);
@@ -263,7 +269,6 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
         }
 
         setSelectedPlacement(null);
-        // Don't clear build mode immediately in setup to allow road placement
         if (phase !== 'setup' && buildMode !== 'city') {
             setBuildMode(null);
         }
@@ -351,15 +356,15 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
     return (
         <div className="hex-board-container">
             {/* Mobile Bottom Sheet Controls */}
-            {canBuild && buildMode && (
+            {canBuild && (buildMode || phase === 'setup') && (
                 <MobilePlacementControls
                     onConfirm={handleConfirmPlacement}
                     onCancel={handleCancelPlacement}
                     isValid={!!selectedPlacement && (
-                        (selectedPlacement.type === 'vertex' && (buildMode === 'settlement' || buildMode === 'city')) ||
-                        (selectedPlacement.type === 'edge' && buildMode === 'road')
+                        (selectedPlacement.type === 'vertex' && (buildMode === 'settlement' || buildMode === 'city' || (!buildMode && phase === 'setup'))) ||
+                        (selectedPlacement.type === 'edge' && (buildMode === 'road' || (!buildMode && phase === 'setup')))
                     )}
-                    selectionType={buildMode}
+                    selectionType={buildMode || (phase === 'setup' ? (selectedPlacement?.type === 'edge' ? 'road' : 'settlement') : null)}
                 />
             )}
 
@@ -417,7 +422,7 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
                         if (!p1 || !p2) return null;
 
                         const existingRoad = roadsByEdge[edge.id];
-                        const isClickable = canBuild && !existingRoad && (buildMode === 'road' || phase === 'setup');
+                        const isClickable = canBuild && !existingRoad && buildMode === 'road';
                         const isSelected = selectedPlacement?.type === 'edge' && selectedPlacement.id === edge.id;
 
                         return (

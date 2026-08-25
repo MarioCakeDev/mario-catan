@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { useRoomActions } from '../hooks/useSocket';
 import { getSocket } from '../socket/socket';
-import type { Player, PlayerColor } from '@catan/shared';
+import type { PlayerColor } from '@catan/shared';
 import './Lobby.css';
 
 const PLAYER_COLORS: PlayerColor[] = ['red', 'blue', 'green', 'orange', 'white', 'brown'];
@@ -15,7 +15,6 @@ function Lobby() {
 
     const gameState = useGameStore(state => state.gameState);
     const playerId = useGameStore(state => state.playerId);
-    const setGameState = useGameStore(state => state.setGameState);
     const players = gameState?.players || [];
     const isHost = players[0]?.id === playerId;
     const currentPlayer = players.find(p => p.id === playerId);
@@ -26,25 +25,8 @@ function Lobby() {
     const usedColors = new Set(players.map(p => p.color));
 
     useEffect(() => {
-        const socket = getSocket();
-
-        const handleRoomUpdated = (updatedPlayers: Player[]) => {
-            console.log('Room updated, players:', updatedPlayers.map(p => p.name));
-            const currentState = useGameStore.getState().gameState;
-            if (currentState) {
-                setGameState({
-                    ...currentState,
-                    players: updatedPlayers
-                });
-            }
-        };
-
-        socket.on('room:updated', handleRoomUpdated);
-
-        return () => {
-            socket.off('room:updated', handleRoomUpdated);
-        };
-    }, [setGameState]);
+        return () => {};
+    }, []);
 
     // Set initial selected color from current player
     useEffect(() => {

@@ -20,6 +20,8 @@ export function registerRoomHandlers(
 
             socket.join(room.id);
 
+            io.to(room.id).emit('room:updated', room.gameState.players);
+
             callback({
                 success: true,
                 roomId: room.id,

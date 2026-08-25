@@ -30,3 +30,8 @@ npm-debug.log*
 
 # Test coverage
 coverage/
+
+# Playwright
+test-results/
+test-*.png
+playwright-report/

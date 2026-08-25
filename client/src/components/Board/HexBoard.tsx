@@ -539,7 +539,6 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
                                         strokeWidth="2"
                                         className={existing ? 'settlement' : 'ghost-settlement'}
                                         style={{
-                                            transformOrigin: 'center',
                                             transform: isSelected ? 'scale(1.2)' : 'scale(1)',
                                             opacity: existing ? 1 : 0.7,
                                             filter: isSelected ? 'drop-shadow(0 4px 6px rgba(0,0,0,0.3))' : 'none'

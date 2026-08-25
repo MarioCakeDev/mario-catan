@@ -46,6 +46,8 @@
 .valid-spot-indicator {
     animation: validPulse 2s infinite ease-in-out;
     will-change: transform, opacity;
+    transform-box: fill-box;
+    transform-origin: center;
 }
 
 /* Selected item pop-in animation - Bounce effect */
@@ -70,6 +72,15 @@
 .ghost-city {
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     will-change: transform, opacity;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+/* SVG transforms must scale around the element itself, not the viewBox */
+.settlement,
+.city {
+    transform-box: fill-box;
+    transform-origin: center;
 }
 
 /* Road selection animation */

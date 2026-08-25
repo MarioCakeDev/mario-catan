@@ -18,6 +18,7 @@ export interface ClientToServerEvents {
     'room:leave': () => void;
     'room:startGame': () => void;
     'room:changeColor': (color: string) => void;
+    'room:addBot': () => void;
 
     // Game actions
     'game:rollDice': () => void;

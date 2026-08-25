@@ -1029,4 +1029,42 @@ export class GameRoom {
             }
         }
     }
+
+    // ============================================
+    // BOT LOGIC
+    // ============================================
+
+    isCurrentPlayerBot(): boolean {
+        const player = this.gameState.players.find(p => p.id === this.gameState.currentPlayerId);
+        return player?.isBot === true;
+    }
+
+    getBotAction(): { action: string; params?: any } | null {
+        if (!this.isCurrentPlayerBot()) return null;
+
+        const player = this.gameState.players.find(p => p.id === this.gameState.currentPlayerId);
+        if (!player) return null;
+
+        if (this.gameState.phase === 'setup') {
+            // Find vertices without buildings
+            const availableVertices = this.gameState.board.vertices.filter(v =>
+                !this.gameState.buildings.some(b => b.vertexId === v.id)
+            );
+            if (availableVertices.length > 0) {
+                const vertex = availableVertices[Math.floor(Math.random() * availableVertices.length)];
+                return { action: 'buildSettlement', params: vertex.id };
+            }
+            return null;
+        }
+
+        if (this.gameState.turnPhase === 'roll') {
+            return { action: 'rollDice' };
+        }
+
+        if (this.gameState.turnPhase === 'main') {
+            return { action: 'endTurn' };
+        }
+
+        return null;
+    }
 }

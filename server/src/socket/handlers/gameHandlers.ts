@@ -3,6 +3,40 @@ import type { GameSocket } from '../socketServer';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@catan/shared';
 import type { RoomManager } from '../../rooms/RoomManager';
 
+function triggerBotIfNeeded(
+    io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
+    room: any,
+    roomId: string
+) {
+    if (!room.isCurrentPlayerBot()) return;
+
+    const action = room.getBotAction();
+    if (!action) return;
+
+    setTimeout(() => {
+        switch (action.action) {
+            case 'rollDice': {
+                const result = room.rollDice(room.gameState.currentPlayerId);
+                if (result.dice) {
+                    io.to(roomId).emit('turn:diceRolled', result.dice, room.gameState.currentPlayerId);
+                }
+                io.to(roomId).emit('game:stateUpdate', room.gameState);
+                // After rolling, trigger next bot action
+                triggerBotIfNeeded(io, room, roomId);
+                break;
+            }
+            case 'endTurn': {
+                room.endTurn();
+                io.to(roomId).emit('turn:changed', room.gameState.currentPlayerId, room.gameState.turnNumber);
+                io.to(roomId).emit('game:stateUpdate', room.gameState);
+                // Trigger bot for next player if needed
+                triggerBotIfNeeded(io, room, roomId);
+                break;
+            }
+        }
+    }, 500);
+}
+
 export function registerGameHandlers(
     io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
     socket: GameSocket,
@@ -52,7 +86,7 @@ export function registerGameHandlers(
             io.to(roomId).emit('turn:diceRolled', result.dice, playerId);
         }
         io.to(roomId).emit('game:stateUpdate', room.gameState);
-        io.to(roomId).emit('game:stateUpdate', room.gameState);
+        triggerBotIfNeeded(io, room, roomId);
     });
 
     // Build settlement - GameRoom.buildSettlement now handles turn validation
@@ -187,6 +221,7 @@ export function registerGameHandlers(
         room.endTurn();
         io.to(roomId).emit('turn:changed', room.gameState.currentPlayerId, room.gameState.turnNumber);
         io.to(roomId).emit('game:stateUpdate', room.gameState);
+        triggerBotIfNeeded(io, room, roomId);
     });
 
     // Move robber

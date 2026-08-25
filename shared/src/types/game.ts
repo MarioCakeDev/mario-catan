@@ -104,6 +104,7 @@ export interface Player {
     longestRoad: number;
     victoryPoints: number;
     isConnected: boolean;
+    isBot?: boolean;
 }
 
 // ============================================

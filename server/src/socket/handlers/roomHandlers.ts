@@ -2,6 +2,7 @@ import type { Server } from 'socket.io';
 import type { GameSocket } from '../socketServer';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@catan/shared';
 import type { RoomManager } from '../../rooms/RoomManager';
+import { createPlayer, getAvailableColor } from '../../game/Resources';
 
 export function registerRoomHandlers(
     io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
@@ -133,12 +134,11 @@ export function registerRoomHandlers(
             return;
         }
 
-        // Minimum 3 players for 4-player game, 5 for 6-player game
-        const minPlayers = room.maxPlayers === 6 ? 5 : 3;
-        if (room.gameState.players.length < minPlayers) {
+        // Minimum 2 players
+        if (room.gameState.players.length < 2) {
             socket.emit('action:error', {
                 action: 'startGame',
-                message: `Need at least ${minPlayers} players to start`,
+                message: 'Need at least 2 players to start',
                 code: 'NOT_ENOUGH_PLAYERS'
             });
             return;
@@ -147,6 +147,75 @@ export function registerRoomHandlers(
         room.startGame();
         io.to(roomId).emit('game:started', room.gameState);
 
+        // Trigger bot if first player is a bot
+        if (room.isCurrentPlayerBot()) {
+            setTimeout(() => {
+                const action = room.getBotAction();
+                if (action && action.action === 'buildSettlement') {
+                    room.buildSettlement(room.gameState.currentPlayerId, action.params);
+                    io.to(roomId).emit('game:stateUpdate', room.gameState);
+                }
+            }, 500);
+        }
+
         console.log(`🎮 Game started in room ${roomId} with ${room.gameState.players.length} players`);
+    });
+
+    // Add a bot player
+    socket.on('room:addBot', () => {
+        const { roomId, playerId } = socket.data;
+
+        if (!roomId || !playerId) return;
+
+        const room = roomManager.getRoom(roomId);
+        if (!room) return;
+
+        // Only host can add bots
+        if (room.gameState.players[0]?.id !== playerId) return;
+
+        // Check if room is full
+        if (room.gameState.players.length >= room.maxPlayers) return;
+
+        // Check game hasn't started
+        if (room.gameState.phase !== 'lobby') return;
+
+        // Create bot with available color
+        const color = getAvailableColor(room.gameState.players);
+        const botId = `bot-${Date.now()}`;
+        const botPlayer = createPlayer(botId, 'Bot', room.gameState.players.length);
+        botPlayer.color = color;
+        botPlayer.isBot = true;
+
+        room.gameState.players.push(botPlayer);
+
+        // Notify all players
+        io.to(roomId).emit('room:updated', room.gameState.players);
+
+        console.log(`🤖 Bot added to room ${roomId} (${room.gameState.players.length}/${room.maxPlayers})`);
+    });
+
+    // Change player color
+    socket.on('room:changeColor', (color) => {
+        const { roomId, playerId } = socket.data;
+
+        if (!roomId || !playerId) return;
+
+        const room = roomManager.getRoom(roomId);
+        if (!room) return;
+
+        // Check game hasn't started
+        if (room.gameState.phase !== 'lobby') return;
+
+        const player = room.gameState.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        // Check color isn't taken by another player
+        const colorTaken = room.gameState.players.some(p => p.id !== playerId && p.color === color);
+        if (colorTaken) return;
+
+        player.color = color as any;
+
+        // Notify all players
+        io.to(roomId).emit('room:updated', room.gameState.players);
     });
 }

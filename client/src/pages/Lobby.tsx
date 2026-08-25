@@ -59,9 +59,14 @@ function Lobby() {
     };
 
     const handleStart = () => {
-        if (players.length >= 3) {
+        if (players.length >= 2) {
             startGame();
         }
+    };
+
+    const handleAddBot = () => {
+        const socket = getSocket();
+        socket.emit('room:addBot');
     };
 
     const copyRoomCode = () => {
@@ -156,12 +161,19 @@ function Lobby() {
                 {isHost && (
                     <div className="lobby-actions">
                         <button
+                            className="btn btn-secondary"
+                            onClick={handleAddBot}
+                            disabled={players.length >= 4}
+                        >
+                            🤖 Add Bot
+                        </button>
+                        <button
                             className="btn btn-primary btn-large"
                             onClick={handleStart}
-                            disabled={players.length < 3}
+                            disabled={players.length < 2}
                         >
-                            {players.length < 3
-                                ? `Need ${3 - players.length} more player${players.length < 2 ? 's' : ''}`
+                            {players.length < 2
+                                ? `Need ${2 - players.length} more player${players.length < 1 ? 's' : ''}`
                                 : '🎲 Start Game'
                             }
                         </button>

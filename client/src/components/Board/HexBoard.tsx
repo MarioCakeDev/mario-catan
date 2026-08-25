@@ -126,7 +126,7 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
 
     // Mobile Selection State
     const [selectedPlacement, setSelectedPlacement] = useState<{ type: 'vertex' | 'edge'; id: string } | null>(null);
-    const [hoveredElement, setHoveredElement] = useState<{ type: 'vertex' | 'edge' | 'hex', id: string } | null>(null);
+    const [hoveredElement] = useState<{ type: 'vertex' | 'edge' | 'hex', id: string } | null>(null);
 
     const isMyTurn = gameState?.currentPlayerId === playerId;
     const phase = gameState?.phase;

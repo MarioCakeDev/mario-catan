@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameState, Player, TradeOffer, ChatMessage } from '@catan/shared';
+import type { GameState, ChatMessage } from '@catan/shared';
 
 interface GameStore {
     // Connection state

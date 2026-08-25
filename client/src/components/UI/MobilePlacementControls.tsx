@@ -1,6 +1,4 @@
 import { useEffect } from 'react';
-import { useGameStore } from '../../store/gameStore';
-import { useGameActions } from '../../hooks/useSocket';
 import './MobilePlacementControls.css';
 
 interface MobilePlacementControlsProps {

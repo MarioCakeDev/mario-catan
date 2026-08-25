@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { getSocket, connectSocket } from '../socket/socket';
-import type { Player, GameState, ResourceType } from '@catan/shared';
+import type { Player, GameState, ResourceType, DevCardPayload } from '@catan/shared';
 
 export function useSocketConnection() {
     const setConnected = useGameStore(state => state.setConnected);
@@ -46,7 +46,7 @@ export function useSocketConnection() {
             console.log('Game ended, winner:', winnerId);
         };
 
-        const handleDiceRolled = (dice: [number, number], playerId: string) => {
+        const handleDiceRolled = (dice: [number, number], _playerId: string) => {
             console.log(`Player rolled ${dice[0]} + ${dice[1]} = ${dice[0] + dice[1]}`);
         };
 
@@ -124,7 +124,7 @@ export function useGameActions() {
             }
         }, [socket]),
 
-        playDevCard: useCallback((cardIndex: number, payload?: { resources?: ResourceType[]; resource?: ResourceType; roads?: [string, string] }) => {
+        playDevCard: useCallback((cardIndex: number, payload?: DevCardPayload) => {
             socket.emit('game:playDevCard', cardIndex, payload);
         }, [socket]),
 

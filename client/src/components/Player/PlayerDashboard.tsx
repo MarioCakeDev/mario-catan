@@ -1,4 +1,4 @@
-import type { Player, Resources, ResourceType } from '@catan/shared';
+import type { Player, ResourceType } from '@catan/shared';
 import './PlayerDashboard.css';
 
 interface PlayerDashboardProps {

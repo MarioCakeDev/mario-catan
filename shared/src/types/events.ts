@@ -4,7 +4,6 @@ import type {
     Resources,
     TradeOffer,
     HexCoord,
-    DevCardType,
     ResourceType
 } from './game.js';
 
@@ -18,6 +17,7 @@ export interface ClientToServerEvents {
     'room:join': (roomId: string, playerName: string, callback: (response: JoinResponse) => void) => void;
     'room:leave': () => void;
     'room:startGame': () => void;
+    'room:changeColor': (color: string) => void;
 
     // Game actions
     'game:rollDice': () => void;

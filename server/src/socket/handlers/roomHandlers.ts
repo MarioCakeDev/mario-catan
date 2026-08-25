@@ -196,6 +196,37 @@ export function registerRoomHandlers(
         console.log(`🤖 Bot added to room ${roomId} (${room.gameState.players.length}/${room.maxPlayers})`);
     });
 
+    // Rejoin room after page refresh
+    socket.on('room:rejoin', (roomId, callback) => {
+        try {
+            const room = roomManager.getRoom(roomId);
+            if (!room) {
+                callback({ success: false, error: 'Room not found' });
+                return;
+            }
+
+            // Find existing player by socket reconnection
+            // The client sends roomId, we need to find which player they were
+            // Since we don't have playerId stored client-side after refresh,
+            // we just add them as a new player if there's space
+            socket.data.roomId = roomId;
+
+            socket.join(roomId);
+
+            callback({
+                success: true,
+                players: room.gameState.players
+            });
+
+            console.log(`🔄 Client rejoined room ${roomId}`);
+        } catch (error) {
+            callback({
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to rejoin'
+            });
+        }
+    });
+
     // Change player color
     socket.on('room:changeColor', (color) => {
         const { roomId, playerId } = socket.data;

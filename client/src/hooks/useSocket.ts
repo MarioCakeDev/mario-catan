@@ -14,6 +14,22 @@ export function useSocketConnection() {
         const handleConnect = () => {
             console.log('Connected to server');
             setConnected(true);
+
+            // Auto-rejoin room if we have one stored
+            const { roomId } = useGameStore.getState();
+            if (roomId) {
+                socket.emit('room:rejoin', roomId, (response) => {
+                    if (response.success && response.players) {
+                        const currentState = useGameStore.getState().gameState;
+                        if (currentState) {
+                            setGameState({
+                                ...currentState,
+                                players: response.players
+                            });
+                        }
+                    }
+                });
+            }
         };
 
         const handleDisconnect = () => {

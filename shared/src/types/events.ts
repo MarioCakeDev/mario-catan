@@ -19,6 +19,7 @@ export interface ClientToServerEvents {
     'room:startGame': () => void;
     'room:changeColor': (color: string) => void;
     'room:addBot': () => void;
+    'room:rejoin': (roomId: string, callback: (response: { success: boolean; players?: any[]; error?: string }) => void) => void;
 
     // Game actions
     'game:rollDice': () => void;

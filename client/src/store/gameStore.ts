@@ -33,9 +33,9 @@ interface GameStore {
 
 const initialState = {
     isConnected: false,
-    playerId: null,
-    playerName: null,
-    roomId: null,
+    playerId: localStorage.getItem('catan_playerId') || null,
+    playerName: localStorage.getItem('catan_playerName') || null,
+    roomId: localStorage.getItem('catan_roomId') || null,
     gameState: null,
     selectedVertex: null,
     selectedEdge: null,
@@ -49,8 +49,12 @@ export const useGameStore = create<GameStore>((set) => ({
 
     setConnected: (isConnected) => set({ isConnected }),
 
-    setPlayerInfo: (playerId, playerName, roomId) =>
-        set({ playerId, playerName, roomId }),
+    setPlayerInfo: (playerId, playerName, roomId) => {
+        localStorage.setItem('catan_playerId', playerId);
+        localStorage.setItem('catan_playerName', playerName);
+        localStorage.setItem('catan_roomId', roomId);
+        set({ playerId, playerName, roomId });
+    },
 
     setGameState: (gameState) => set({ gameState }),
 
@@ -72,7 +76,12 @@ export const useGameStore = create<GameStore>((set) => ({
             chatMessages: [...state.chatMessages.slice(-99), message]
         })),
 
-    reset: () => set(initialState)
+    reset: () => {
+        localStorage.removeItem('catan_playerId');
+        localStorage.removeItem('catan_playerName');
+        localStorage.removeItem('catan_roomId');
+        set(initialState);
+    }
 }));
 
 // Selectors for common queries

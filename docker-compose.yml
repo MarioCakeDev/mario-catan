@@ -22,6 +22,9 @@ services:
       - PORT=3001
       - REDIS_URL=redis://redis:6379
       - CORS_ORIGIN=https://catan.coolify.lan
+      - DATA_DIR=/data
+    volumes:
+      - game-data:/data
     depends_on:
       - redis
     restart: unless-stopped
@@ -44,3 +47,4 @@ networks:
 
 volumes:
   redis-data:
+  game-data:

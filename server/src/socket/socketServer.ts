@@ -39,6 +39,16 @@ export function setupSocketServer(httpServer: HttpServer, corsOrigin: string) {
         registerGameHandlers(io, socket, roomManager);
         registerTradeHandlers(io, socket, roomManager);
 
+        // Save on every action (debounced via RoomManager)
+        socket.onAny(() => {
+            // Mark room dirty if player is in one
+            const { roomId } = socket.data;
+            if (roomId) {
+                const room = roomManager.getRoom(roomId);
+                if (room) room.markDirty();
+            }
+        });
+
         // Handle disconnection
         socket.on('disconnect', (reason) => {
             console.log(`🔌 Client disconnected: ${socket.id} (${reason})`);

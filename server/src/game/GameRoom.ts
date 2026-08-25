@@ -64,12 +64,39 @@ export class GameRoom {
     private setupProgress: Map<string, SetupProgress> = new Map();
     private devCardsPurchasedThisTurn: Set<number> = new Set(); // Track cards bought this turn
     private diceDeck: [number, number][] = []; // 36-card deck for balanced rolls
+    private dirty = false;
 
-    constructor(id: string, maxPlayers: 4 | 6 = 4) {
+    constructor(id: string, maxPlayers: 4 | 6 = 4, restoredState?: { gameState: any; diceDeck: [number, number][] }) {
         this.id = id;
         this.maxPlayers = maxPlayers;
-        this.gameState = this.createInitialState();
-        this.initializeDiceDeck();
+        if (restoredState) {
+            this.gameState = restoredState.gameState;
+            this.diceDeck = restoredState.diceDeck;
+        } else {
+            this.gameState = this.createInitialState();
+            this.initializeDiceDeck();
+        }
+    }
+
+    serialize(): { id: string; maxPlayers: 4 | 6; gameState: any; diceDeck: [number, number][] } {
+        return {
+            id: this.id,
+            maxPlayers: this.maxPlayers,
+            gameState: this.gameState,
+            diceDeck: this.diceDeck
+        };
+    }
+
+    markDirty(): void {
+        this.dirty = true;
+    }
+
+    isDirty(): boolean {
+        return this.dirty;
+    }
+
+    clearDirty(): void {
+        this.dirty = false;
     }
 
     private initializeDiceDeck(): void {

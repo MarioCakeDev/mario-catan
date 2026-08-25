@@ -14,6 +14,16 @@ interface HexBoardProps {
 // Flat-top hexagons
 const HEX_SIZE = 45;
 
+// Hex neighbor directions (axial coordinates, flat-top)
+const HEX_DIRECTIONS = [
+    { q: 1, r: 0 }, { q: 1, r: -1 }, { q: 0, r: -1 },
+    { q: -1, r: 0 }, { q: -1, r: 1 }, { q: 0, r: 1 }
+];
+
+function getHexNeighbors(coord: { q: number; r: number }) {
+    return HEX_DIRECTIONS.map(d => ({ q: coord.q + d.q, r: coord.r + d.r }));
+}
+
 // Convert axial to pixel
 function hexToPixel(q: number, r: number): { x: number; y: number } {
     const x = HEX_SIZE * (3 / 2 * q);
@@ -150,35 +160,68 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
         setSelectedPlacement(null);
     }, [buildMode]);
 
-    // Optimize vertex position calculation with useMemo
+    // Compute correct vertex positions from hex geometry
     const vertexPositions = useMemo(() => {
         const result = new Map<string, { x: number, y: number }>();
         if (!board.hexes.length) return result;
 
+        const hexMap = new Map<string, { x: number; y: number }>();
+        for (const hex of board.hexes) {
+            hexMap.set(`${hex.coord.q},${hex.coord.r}`, hexToPixel(hex.coord.q, hex.coord.r));
+        }
+
+        // Flat-top hex corner angles (degrees): 0, 60, 120, 180, 240, 300
+        const cornerAngles = [0, 60, 120, 180, 240, 300];
+
+        const vertexHexSets = new Map<string, Set<string>>();
         for (const vertex of board.vertices) {
-            if (vertex.hexes.length > 0) {
-                const positions: { x: number, y: number }[] = [];
-                for (const hexCoord of vertex.hexes) {
-                    const center = hexToPixel(hexCoord.q, hexCoord.r);
-                    const corners = getHexCorners(center.x, center.y);
-                    positions.push(...corners);
-                }
+            vertexHexSets.set(vertex.id, new Set(vertex.hexes.map(h => `${h.q},${h.r}`)));
+        }
 
-                if (positions.length > 0) {
-                    let count = 0;
-                    let sumX = 0;
-                    let sumY = 0;
-                    const p0 = positions[0];
+        for (const vertex of board.vertices) {
+            if (vertex.hexes.length === 0) continue;
 
-                    for (const p of positions) {
-                        if (Math.abs(p.x - p0.x) < 5 && Math.abs(p.y - p0.y) < 5) {
-                            sumX += p.x;
-                            sumY += p.y;
-                            count++;
-                        }
+            // Find which corner of each touching hex this vertex is at
+            const positions: { x: number; y: number }[] = [];
+
+            for (const hexCoord of vertex.hexes) {
+                const center = hexMap.get(`${hexCoord.q},${hexCoord.r}`);
+                if (!center) continue;
+
+                const neighbors = getHexNeighbors(hexCoord);
+                const vertexSet = vertexHexSets.get(vertex.id)!;
+
+                for (let i = 0; i < 6; i++) {
+                    const n1 = neighbors[i];
+                    const n2 = neighbors[(i + 1) % 6];
+
+                    // The corner set: this hex plus its two neighbors, filtered to board hexes
+                    const cornerSet = new Set([
+                        `${hexCoord.q},${hexCoord.r}`,
+                        `${n1.q},${n1.r}`,
+                        `${n2.q},${n2.r}`
+                    ]);
+                    for (const key of [...cornerSet]) {
+                        if (!hexMap.has(key)) cornerSet.delete(key);
                     }
-                    result.set(vertex.id, { x: sumX / count, y: sumY / count });
+
+                    // Match if the corner set equals the vertex's hex set
+                    if (cornerSet.size === vertexSet.size && [...cornerSet].every(k => vertexSet.has(k))) {
+                        const angle = (Math.PI / 180) * cornerAngles[i];
+                        positions.push({
+                            x: center.x + HEX_SIZE * Math.cos(angle),
+                            y: center.y + HEX_SIZE * Math.sin(angle)
+                        });
+                        break;
+                    }
                 }
+            }
+
+            if (positions.length > 0) {
+                // Average positions (should be very close or identical)
+                const avgX = positions.reduce((s, p) => s + p.x, 0) / positions.length;
+                const avgY = positions.reduce((s, p) => s + p.y, 0) / positions.length;
+                result.set(vertex.id, { x: avgX, y: avgY });
             }
         }
         return result;

@@ -19,7 +19,9 @@ export function useSocketConnection() {
             const { roomId } = useGameStore.getState();
             if (roomId) {
                 socket.emit('room:rejoin', roomId, (response) => {
-                    if (response.success && response.players) {
+                    if (response.success && response.gameState) {
+                        setGameState(response.gameState);
+                    } else if (response.success && response.players) {
                         const currentState = useGameStore.getState().gameState;
                         if (currentState) {
                             setGameState({

@@ -205,20 +205,17 @@ export function registerRoomHandlers(
                 return;
             }
 
-            // Find existing player by socket reconnection
-            // The client sends roomId, we need to find which player they were
-            // Since we don't have playerId stored client-side after refresh,
-            // we just add them as a new player if there's space
             socket.data.roomId = roomId;
 
             socket.join(roomId);
 
             callback({
                 success: true,
-                players: room.gameState.players
+                players: room.gameState.players,
+                gameState: room.gameState
             });
 
-            console.log(`🔄 Client rejoined room ${roomId}`);
+            console.log(`🔄 Client rejoined room ${roomId} (phase: ${room.gameState.phase})`);
         } catch (error) {
             callback({
                 success: false,

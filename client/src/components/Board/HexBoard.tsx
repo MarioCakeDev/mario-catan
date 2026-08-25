@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import type { Board, Building, Road, Hex, TerrainType } from '@catan/shared';
 import { useGameStore } from '../../store/gameStore';
 import { useGameActions } from '../../hooks/useSocket';
@@ -128,6 +128,17 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
     const [selectedPlacement, setSelectedPlacement] = useState<{ type: 'vertex' | 'edge'; id: string } | null>(null);
     const [hoveredElement] = useState<{ type: 'vertex' | 'edge' | 'hex', id: string } | null>(null);
 
+    // Touch zoom/pan state
+    const svgRef = useRef<SVGSVGElement>(null);
+    const [viewBox, setViewBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+    const touchState = useRef({
+        lastDist: 0,
+        lastMid: { x: 0, y: 0 },
+        lastTouches: [] as { x: number; y: number }[],
+        isPanning: false,
+        startPan: { x: 0, y: 0 }
+    });
+
     const isMyTurn = gameState?.currentPlayerId === playerId;
     const phase = gameState?.phase;
     const turnPhase = gameState?.turnPhase;
@@ -240,6 +251,12 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
                 buildCity(selectedPlacement.id);
             } else {
                 buildSettlement(selectedPlacement.id);
+                // In setup: after settlement, auto-switch to road mode
+                if (phase === 'setup') {
+                    setSelectedPlacement(null);
+                    setBuildMode('road');
+                    return;
+                }
             }
         } else if (selectedPlacement.type === 'edge') {
             buildRoad(selectedPlacement.id);
@@ -258,6 +275,78 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
     };
 
     const myPlayerId = playerId || '';
+
+    // Touch zoom/pan handlers
+    const getTouchDist = (t1: { x: number; y: number }, t2: { x: number; y: number }) =>
+        Math.hypot(t2.x - t1.x, t2.y - t1.y);
+
+    const getTouchMid = (t1: { x: number; y: number }, t2: { x: number; y: number }) =>
+        ({ x: (t1.x + t2.x) / 2, y: (t1.y + t2.y) / 2 });
+
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            const t = e.touches;
+            const t1 = { x: t[0].clientX, y: t[0].clientY };
+            const t2 = { x: t[1].clientX, y: t[1].clientY };
+            touchState.current.lastDist = getTouchDist(t1, t2);
+            touchState.current.lastMid = getTouchMid(t1, t2);
+            touchState.current.lastTouches = [t1, t2];
+        } else if (e.touches.length === 1) {
+            touchState.current.isPanning = true;
+            touchState.current.startPan = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+    }, []);
+
+    const handleTouchMove = useCallback((e: React.TouchEvent) => {
+        if (e.touches.length === 2 && viewBox) {
+            e.preventDefault();
+            const t = e.touches;
+            const t1 = { x: t[0].clientX, y: t[0].clientY };
+            const t2 = { x: t[1].clientX, y: t[1].clientY };
+            const newDist = getTouchDist(t1, t2);
+            const newMid = getTouchMid(t1, t2);
+            const scale = touchState.current.lastDist / newDist;
+
+            const svg = svgRef.current;
+            if (!svg) return;
+            const rect = svg.getBoundingClientRect();
+
+            // Convert mid to SVG coords
+            const midSvg = {
+                x: viewBox.x + (newMid.x - rect.left) / rect.width * viewBox.w,
+                y: viewBox.y + (newMid.y - rect.top) / rect.height * viewBox.h
+            };
+
+            const newW = viewBox.w * scale;
+            const newH = viewBox.h * scale;
+            const newX = midSvg.x - (midSvg.x - viewBox.x) * scale;
+            const newY = midSvg.y - (midSvg.y - viewBox.y) * scale;
+
+            setViewBox({ x: newX, y: newY, w: newW, h: newH });
+            touchState.current.lastDist = newDist;
+            touchState.current.lastMid = newMid;
+        } else if (e.touches.length === 1 && touchState.current.isPanning && viewBox) {
+            const touch = e.touches[0];
+            const dx = touch.clientX - touchState.current.startPan.x;
+            const dy = touch.clientY - touchState.current.startPan.y;
+            const svg = svgRef.current;
+            if (!svg) return;
+            const rect = svg.getBoundingClientRect();
+            const svgDx = -dx / rect.width * viewBox.w;
+            const svgDy = -dy / rect.height * viewBox.h;
+            setViewBox(v => v ? { ...v, x: v.x + svgDx, y: v.y + svgDy } : v);
+            touchState.current.startPan = { x: touch.clientX, y: touch.clientY };
+        }
+    }, [viewBox]);
+
+    const handleTouchEnd = useCallback(() => {
+        touchState.current.isPanning = false;
+    }, []);
+
+    const resetView = useCallback(() => {
+        setViewBox(null);
+    }, []);
 
     return (
         <div className="hex-board-container">
@@ -279,7 +368,7 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
                     {phase === 'setup' ? (
                         <span>🏠 Setup: Place settlement then road</span>
                     ) : buildMode ? (
-                        <span>Testing Mode: {buildMode}</span>
+                        <span>Build: {buildMode}</span>
                     ) : (
                         <span>Your turn</span>
                     )}
@@ -293,11 +382,16 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
             )}
 
             <svg
+                ref={svgRef}
                 className={`hex-board ${canBuild ? 'can-build' : ''}`}
-                viewBox={`${minX} ${minY} ${width} ${height}`}
+                viewBox={viewBox ? `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}` : `${minX} ${minY} ${width} ${height}`}
                 preserveAspectRatio="xMidYMid meet"
                 role="application"
                 aria-label="Catan Game Board"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{ touchAction: 'none' }}
             >
                 <rect x={minX} y={minY} width={width} height={height} fill="#2c3e50" />
 
@@ -474,6 +568,11 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
                     })}
                 </g>
             </svg>
+            {viewBox && (
+                <button className="reset-view-btn" onClick={resetView} title="Reset zoom">
+                    ⊞
+                </button>
+            )}
         </div>
     );
 }

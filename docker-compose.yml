@@ -21,7 +21,7 @@ services:
       - NODE_ENV=production
       - PORT=3001
       - REDIS_URL=redis://redis:6379
-      - CORS_ORIGIN=http://localhost
+      - CORS_ORIGIN=https://catan.coolify.lan
     depends_on:
       - redis
     restart: unless-stopped

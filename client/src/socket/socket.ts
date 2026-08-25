@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import type { ClientToServerEvents, ServerToClientEvents } from '@catan/shared';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
 
 export type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 

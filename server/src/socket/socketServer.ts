@@ -1,4 +1,4 @@
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 import type {
     ClientToServerEvents,
@@ -11,9 +11,7 @@ import { registerRoomHandlers } from './handlers/roomHandlers';
 import { registerGameHandlers } from './handlers/gameHandlers';
 import { registerTradeHandlers } from './handlers/tradeHandlers';
 
-export type GameSocket = Parameters<
-    Parameters<typeof io.on<'connection'>>[1]
->[0];
+export type GameSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
 let io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 

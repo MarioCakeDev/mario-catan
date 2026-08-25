@@ -1,15 +1,7 @@
 import type { Server } from 'socket.io';
-import type {
-    ClientToServerEvents,
-    ServerToClientEvents,
-    InterServerEvents,
-    SocketData
-} from '@catan/shared';
+import type { GameSocket } from '../socketServer';
+import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@catan/shared';
 import type { RoomManager } from '../../rooms/RoomManager';
-
-type GameSocket = Parameters<
-    Parameters<Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>['on']>[1]
->[0];
 
 export function registerRoomHandlers(
     io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,

@@ -1,15 +1,7 @@
 import type { Server } from 'socket.io';
-import type {
-    ClientToServerEvents,
-    ServerToClientEvents,
-    InterServerEvents,
-    SocketData
-} from '@catan/shared';
+import type { GameSocket } from '../socketServer';
+import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@catan/shared';
 import type { RoomManager } from '../../rooms/RoomManager';
-
-type GameSocket = Parameters<
-    Parameters<Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>['on']>[1]
->[0];
 
 export function registerGameHandlers(
     io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
@@ -55,8 +47,11 @@ export function registerGameHandlers(
             return;
         }
 
-        const dice = room.rollDice();
-        io.to(roomId).emit('turn:diceRolled', dice, playerId);
+        const result = room.rollDice(playerId);
+        if (result.dice) {
+            io.to(roomId).emit('turn:diceRolled', result.dice, playerId);
+        }
+        io.to(roomId).emit('game:stateUpdate', room.gameState);
         io.to(roomId).emit('game:stateUpdate', room.gameState);
     });
 

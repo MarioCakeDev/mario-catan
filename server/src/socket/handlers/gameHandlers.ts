@@ -3,38 +3,60 @@ import type { GameSocket } from '../socketServer';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@catan/shared';
 import type { RoomManager } from '../../rooms/RoomManager';
 
-function triggerBotIfNeeded(
+export function triggerBotIfNeeded(
     io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
     room: any,
     roomId: string
 ) {
+    if (room.gameState.phase === 'finished') return;
     if (!room.isCurrentPlayerBot()) return;
 
     const action = room.getBotAction();
     if (!action) return;
 
     setTimeout(() => {
+        if (!room.isCurrentPlayerBot() || room.gameState.phase === 'finished') return;
+
+        let handled = false;
+        const botId = room.gameState.currentPlayerId;
+
         switch (action.action) {
             case 'rollDice': {
-                const result = room.rollDice(room.gameState.currentPlayerId);
+                const result = room.rollDice(botId);
                 if (result.dice) {
-                    io.to(roomId).emit('turn:diceRolled', result.dice, room.gameState.currentPlayerId);
+                    io.to(roomId).emit('turn:diceRolled', result.dice, botId);
                 }
                 io.to(roomId).emit('game:stateUpdate', room.gameState);
-                // After rolling, trigger next bot action
-                triggerBotIfNeeded(io, room, roomId);
+                handled = true;
+                break;
+            }
+            case 'buildSettlement': {
+                const result = room.buildSettlement(botId, action.params);
+                if (result.success) {
+                    io.to(roomId).emit('game:stateUpdate', room.gameState);
+                    handled = true;
+                }
+                break;
+            }
+            case 'buildRoad': {
+                const result = room.buildRoad(botId, action.params);
+                if (result.success) {
+                    io.to(roomId).emit('game:stateUpdate', room.gameState);
+                    handled = true;
+                }
                 break;
             }
             case 'endTurn': {
                 room.endTurn();
                 io.to(roomId).emit('turn:changed', room.gameState.currentPlayerId, room.gameState.turnNumber);
                 io.to(roomId).emit('game:stateUpdate', room.gameState);
-                // Trigger bot for next player if needed
-                triggerBotIfNeeded(io, room, roomId);
+                handled = true;
                 break;
             }
         }
-    }, 500);
+
+        if (handled) triggerBotIfNeeded(io, room, roomId);
+    }, 600);
 }
 
 export function registerGameHandlers(
@@ -109,6 +131,7 @@ export function registerGameHandlers(
 
         io.to(roomId).emit('game:stateUpdate', room.gameState);
         socket.emit('action:result', { success: true, action: 'buildSettlement', data: { vertexId } });
+        triggerBotIfNeeded(io, room, roomId);
     });
 
     // Build city
@@ -151,6 +174,7 @@ export function registerGameHandlers(
 
         io.to(roomId).emit('game:stateUpdate', room.gameState);
         socket.emit('action:result', { success: true, action: 'buildRoad', data: { edgeId } });
+        triggerBotIfNeeded(io, room, roomId);
     });
 
     // Buy development card
@@ -199,6 +223,11 @@ export function registerGameHandlers(
 
         if (room.gameState.currentPlayerId !== playerId) {
             socket.emit('action:error', { action: 'endTurn', message: 'Not your turn', code: 'NOT_YOUR_TURN' });
+            return;
+        }
+
+        if (room.gameState.phase === 'setup') {
+            socket.emit('action:error', { action: 'endTurn', message: 'Setup turns advance automatically', code: 'SETUP_AUTO_ADVANCE' });
             return;
         }
 

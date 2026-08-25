@@ -413,6 +413,7 @@ export class GameRoom {
 
         this.updateVictoryPoints();
         this.checkWinCondition();
+        this.maybeAdvanceSetup();
 
         return { success: true };
     }
@@ -517,6 +518,7 @@ export class GameRoom {
 
         this.updateLongestRoad();
         this.updateVictoryPoints();
+        this.maybeAdvanceSetup();
 
         return { success: true };
     }
@@ -1073,14 +1075,37 @@ export class GameRoom {
         if (!player) return null;
 
         if (this.gameState.phase === 'setup') {
-            // Find vertices without buildings
-            const availableVertices = this.gameState.board.vertices.filter(v =>
-                !this.gameState.buildings.some(b => b.vertexId === v.id)
-            );
-            if (availableVertices.length > 0) {
-                const vertex = availableVertices[Math.floor(Math.random() * availableVertices.length)];
+            const progress = this.getSetupProgress(player.id);
+            const expected = this.gameState.setupRound;
+
+            // Step 1: place settlement (respecting distance rule)
+            if (progress.settlementsPlaced < expected) {
+                const available = this.gameState.board.vertices.filter(v =>
+                    !this.gameState.buildings.some(b => b.vertexId === v.id) &&
+                    !this.gameState.buildings.some(b => areVerticesAdjacent(this.gameState.board, v.id, b.vertexId))
+                );
+                if (available.length === 0) return null;
+                const vertex = available[Math.floor(Math.random() * available.length)];
                 return { action: 'buildSettlement', params: vertex.id };
             }
+
+            // Step 2: place road adjacent to last settlement
+            if (progress.roadsPlaced < progress.settlementsPlaced) {
+                const mySettlements = this.gameState.buildings.filter(
+                    b => b.playerId === player.id && b.type === 'settlement'
+                );
+                const lastSettlement = mySettlements[mySettlements.length - 1];
+                if (!lastSettlement) return null;
+
+                const candidateEdges = this.gameState.board.edges.filter(e =>
+                    (e.vertices[0] === lastSettlement.vertexId || e.vertices[1] === lastSettlement.vertexId) &&
+                    !this.gameState.roads.some(r => r.edgeId === e.id)
+                );
+                if (candidateEdges.length === 0) return null;
+                const edge = candidateEdges[Math.floor(Math.random() * candidateEdges.length)];
+                return { action: 'buildRoad', params: edge.id };
+            }
+
             return null;
         }
 
@@ -1093,5 +1118,18 @@ export class GameRoom {
         }
 
         return null;
+    }
+
+    // Auto-advance setup turn when the current player finished their placements
+    private maybeAdvanceSetup(): void {
+        if (this.gameState.phase !== 'setup') return;
+        const progress = this.getSetupProgress(this.gameState.currentPlayerId);
+        const expected = this.gameState.setupRound;
+        if (progress.settlementsPlaced >= expected && progress.roadsPlaced >= expected) {
+            const currentIndex = this.gameState.players.findIndex(
+                p => p.id === this.gameState.currentPlayerId
+            );
+            this.advanceSetupTurn(currentIndex);
+        }
     }
 }

@@ -3,6 +3,7 @@ import type { GameSocket } from '../socketServer';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@catan/shared';
 import type { RoomManager } from '../../rooms/RoomManager';
 import { createPlayer, getAvailableColor } from '../../game/Resources';
+import { triggerBotIfNeeded } from './gameHandlers';
 
 export function registerRoomHandlers(
     io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
@@ -150,15 +151,7 @@ export function registerRoomHandlers(
         io.to(roomId).emit('game:started', room.gameState);
 
         // Trigger bot if first player is a bot
-        if (room.isCurrentPlayerBot()) {
-            setTimeout(() => {
-                const action = room.getBotAction();
-                if (action && action.action === 'buildSettlement') {
-                    room.buildSettlement(room.gameState.currentPlayerId, action.params);
-                    io.to(roomId).emit('game:stateUpdate', room.gameState);
-                }
-            }, 500);
-        }
+        triggerBotIfNeeded(io, room, roomId);
 
         console.log(`🎮 Game started in room ${roomId} with ${room.gameState.players.length} players`);
     });

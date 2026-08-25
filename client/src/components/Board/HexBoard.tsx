@@ -309,6 +309,10 @@ function HexBoard({ board, buildings, roads }: HexBoardProps) {
             }
         } else if (selectedPlacement.type === 'edge') {
             buildRoad(selectedPlacement.id);
+            if (phase === 'setup') {
+                // Road done for this placement — back to settlement mode for next round
+                setBuildMode(null);
+            }
         }
 
         setSelectedPlacement(null);

@@ -56,8 +56,6 @@ export function useSocketConnection() {
 
         const handleStateUpdate = (state: GameState) => {
             setGameState(state);
-            // Clear build mode when state updates (e.g., after placing)
-            useGameStore.getState().setBuildMode(null);
         };
 
         const handleGameEnded = (winnerId: string) => {

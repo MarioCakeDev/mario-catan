@@ -61,7 +61,6 @@ export class GameRoom {
     public readonly maxPlayers: 4 | 6;
     public gameState: GameState;
     private playerTokens: Map<string, string> = new Map();
-    private setupProgress: Map<string, SetupProgress> = new Map();
     private devCardsPurchasedThisTurn: Set<number> = new Set(); // Track cards bought this turn
     private diceDeck: [number, number][] = []; // 36-card deck for balanced rolls
     private dirty = false;
@@ -167,7 +166,6 @@ export class GameRoom {
         const wasHost = this.gameState.players[0]?.id === playerId;
         this.gameState.players = this.gameState.players.filter(p => p.id !== playerId);
         this.playerTokens.delete(playerId);
-        this.setupProgress.delete(playerId);
 
         if (wasHost && this.gameState.players.length > 0) {
             console.log(`Host transferred to ${this.gameState.players[0].name}`);
@@ -219,11 +217,6 @@ export class GameRoom {
         this.gameState.turnNumber = 1;
         this.gameState.currentPlayerId = this.gameState.players[0].id;
         this.gameState.setupRound = 1;
-
-        // Initialize setup progress for all players
-        for (const player of this.gameState.players) {
-            this.setupProgress.set(player.id, { settlementsPlaced: 0, roadsPlaced: 0 });
-        }
     }
 
     // ============================================
@@ -319,7 +312,13 @@ export class GameRoom {
     // ============================================
 
     private getSetupProgress(playerId: string): SetupProgress {
-        return this.setupProgress.get(playerId) || { settlementsPlaced: 0, roadsPlaced: 0 };
+        const settlementsPlaced = this.gameState.buildings.filter(
+            b => b.playerId === playerId && b.type === 'settlement'
+        ).length;
+        const roadsPlaced = this.gameState.roads.filter(
+            r => r.playerId === playerId
+        ).length;
+        return { settlementsPlaced, roadsPlaced };
     }
 
     private giveInitialResources(playerId: string, vertexId: string): void {
@@ -387,7 +386,6 @@ export class GameRoom {
 
             // Place settlement
             this.gameState.buildings.push({ type: 'settlement', vertexId, playerId });
-            progress.settlementsPlaced++;
 
             // Give initial resources for second settlement
             this.giveInitialResources(playerId, vertexId);
@@ -501,7 +499,6 @@ export class GameRoom {
             }
 
             this.gameState.roads.push({ edgeId, playerId });
-            progress.roadsPlaced++;
         } else {
             // Main game phase
             if (!hasConnection) {
